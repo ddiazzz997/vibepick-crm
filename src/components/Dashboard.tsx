@@ -413,7 +413,21 @@ export default function Dashboard() {
         }
         setLoading(false)
     }
-    useEffect(() => { load() }, [])
+    useEffect(() => {
+        load()
+        // Real-time: reload when any new user registers in the main app
+        const channel = supabase
+            .channel('crm_users_realtime')
+            .on('postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'users' },
+                () => { load() }
+            )
+            .subscribe((status) => {
+                if (status === 'CHANNEL_ERROR')
+                    console.warn('[CRM] Realtime subscription failed — manual refresh still works')
+            })
+        return () => { supabase.removeChannel(channel) }
+    }, [])
 
     const getScore = (email: string) => scores.find(s => s.email === email)
     const getPipe  = (email: string) => pipeline.find(p => p.email === email)
