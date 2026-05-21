@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Dashboard from './components/Dashboard'
 import Logo from './components/Logo'
-import { supabase } from './lib/supabase'
+import { supabase, supabaseMisconfigured } from './lib/supabase'
 
 const ADMIN_EMAIL    = import.meta.env.VITE_ADMIN_EMAIL    as string
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD as string
@@ -91,6 +91,20 @@ function AdminLogin({ onSuccess }: { onSuccess: () => void }) {
   )
 }
 
+function MisconfiguredScreen() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#050810' }}>
+      <div className="text-center max-w-sm mx-4 p-8 rounded-2xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+        <p style={{ color: '#f87171', fontWeight: 700, fontSize: '1rem', marginBottom: '8px' }}>Variables de entorno faltantes</p>
+        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.82rem', lineHeight: 1.6 }}>
+          Configura <code style={{ color: '#fbbf24' }}>VITE_SUPABASE_URL</code> y{' '}
+          <code style={{ color: '#fbbf24' }}>VITE_SUPABASE_ANON_KEY</code> en el panel de Vercel y redespliega.
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const [status, setStatus] = useState<AuthStatus>('loading')
 
@@ -111,6 +125,7 @@ export default function App() {
     return () => clearTimeout(fallback)
   }, [])
 
+  if (supabaseMisconfigured) return <MisconfiguredScreen />
   if (status === 'loading') return <LoadingScreen />
   if (status === 'login')   return <AdminLogin onSuccess={() => setStatus('authorized')} />
 
